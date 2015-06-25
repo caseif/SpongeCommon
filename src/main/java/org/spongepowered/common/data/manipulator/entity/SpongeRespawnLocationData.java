@@ -24,45 +24,84 @@
  */
 package org.spongepowered.common.data.manipulator.entity;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.spongepowered.api.data.DataQuery.of;
 
+import com.flowpowered.math.vector.Vector3d;
+import com.google.common.base.Optional;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataQuery;
+import org.spongepowered.api.data.DataTransactionResult;
 import org.spongepowered.api.data.MemoryDataContainer;
 import org.spongepowered.api.data.manipulator.entity.RespawnLocationData;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.common.data.manipulator.AbstractSingleValueData;
+import org.spongepowered.common.Sponge;
+import org.spongepowered.common.data.DataTransactionBuilder;
+import org.spongepowered.common.data.manipulator.AbstractMappedData;
 
-public class SpongeRespawnLocationData extends AbstractSingleValueData<Location, RespawnLocationData> implements RespawnLocationData {
+import java.util.Map;
+import java.util.UUID;
+
+public class SpongeRespawnLocationData extends AbstractMappedData<UUID, Vector3d, RespawnLocationData> implements RespawnLocationData {
 
     public static final DataQuery RESPAWN_LOCATION = of("RespawnLocation");
 
-    public SpongeRespawnLocationData(Location defaultLocation) {
-        super(RespawnLocationData.class, defaultLocation);
+    public SpongeRespawnLocationData() {
+        super(RespawnLocationData.class);
     }
 
     @Override
-    public Location getRespawnLocation() {
-        return this.getValue();
+    public DataTransactionResult set(UUID key, Vector3d value) {
+        if (!Sponge.getGame().getServer().getWorld(key).isPresent()) {
+            return DataTransactionBuilder.fail(this);
+        }
+        this.keyValueMap.put(key, checkNotNull(value, "value"));
+        return DataTransactionBuilder.successNoData();
     }
 
     @Override
-    public RespawnLocationData setRespawnLocation(Location location) {
-        return this.setValue(location);
+    public DataTransactionResult set(Map<UUID, Vector3d> mapped) {
+        // TODO Auto-generated method stub
+        return DataTransactionBuilder.builder().result(DataTransactionResult.Type.CANCELLED).build();
+    }
+
+    @Override
+    public DataTransactionResult set(UUID... mapped) {
+        // TODO Auto-generated method stub
+        return DataTransactionBuilder.builder().result(DataTransactionResult.Type.CANCELLED).build();
     }
 
     @Override
     public RespawnLocationData copy() {
-        return new SpongeRespawnLocationData(this.getValue());
+        SpongeRespawnLocationData data = new SpongeRespawnLocationData();
+        data.keyValueMap.putAll(this.keyValueMap);
+        return data;
     }
 
     @Override
     public int compareTo(RespawnLocationData o) {
-        return o.getValue().getPosition().compareTo(this.getValue().getPosition());
+        return 0;
     }
 
     @Override
     public DataContainer toContainer() {
-        return new MemoryDataContainer().set(RESPAWN_LOCATION, this.getValue());
+        return new MemoryDataContainer()
+                .set(RESPAWN_LOCATION, this.asMap());
+    }
+
+    @Override
+    public Optional<Vector3d> getRespawnPosition(UUID worldUuid) {
+        return this.get(worldUuid);
+    }
+
+    @Override
+    public RespawnLocationData setRespawnPosition(UUID worldUuid, Vector3d position) {
+        checkArgument(Sponge.getGame().getServer().getWorld(checkNotNull(worldUuid, "worldUuid")).isPresent(), "UUID is not a valid world");
+        if (position == null) {
+            this.keyValueMap.remove(worldUuid);
+        } else {
+            this.keyValueMap.put(worldUuid, position);
+        }
+        return this;
     }
 }

@@ -26,8 +26,15 @@ package org.spongepowered.common.interfaces;
 
 import net.minecraft.util.BlockPos;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public interface IMixinEntityPlayer {
     BlockPos getBedLocation(int dim);
 
     boolean isSpawnForced(int dim);
+
+    Map<Integer, BlockPos> getAllBedLocations();
+
+    void setAllBedLocations(HashMap<Integer, BlockPos> locations);
 }

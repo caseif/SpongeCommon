@@ -37,6 +37,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.interfaces.IMixinEntityPlayer;
 import org.spongepowered.common.mixin.core.entity.living.MixinEntityLivingBase;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @NonnullByDefault
 @Mixin(EntityPlayer.class)
 public abstract class MixinEntityPlayer extends MixinEntityLivingBase implements IMixinEntityPlayer {
@@ -55,6 +58,7 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase implements
     @Shadow public abstract net.minecraft.scoreboard.Scoreboard getWorldScoreboard();
     @Shadow protected BlockPos spawnChunk;
     @Shadow protected FoodStats foodStats;
+    @Shadow private HashMap<Integer, BlockPos> spawnChunkMap;
 
     public double getExhaustion() {
         return this.getFoodStats().foodExhaustionLevel;
@@ -126,5 +130,15 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase implements
 
     public void setFlying(boolean flying) {
         this.capabilities.isFlying = flying;
+    }
+
+    @Override
+    public Map<Integer, BlockPos> getAllBedLocations() {
+        return this.spawnChunkMap;
+    }
+
+    @Override
+    public void setAllBedLocations(HashMap<Integer, BlockPos> locations) {
+        this.spawnChunkMap = locations;
     }
 }
